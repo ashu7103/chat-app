@@ -1,0 +1,319 @@
+<!--&lt;!&ndash;<!DOCTYPE html>&ndash;&gt;-->
+<!--&lt;!&ndash;<html lang="en">&ndash;&gt;-->
+<!--&lt;!&ndash;<head>&ndash;&gt;-->
+<!--&lt;!&ndash;    <meta charset="UTF-8">&ndash;&gt;-->
+<!--&lt;!&ndash;    <meta name="viewport" content="width=device-width, initial-scale=1.0">&ndash;&gt;-->
+<!--&lt;!&ndash;    <title>Chat App</title>&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdn.tailwindcss.com"></script>&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash;    <script src="/webjars/sockjs-client/sockjs.min.js"></script>&ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash;    <script src="/webjars/stomp-websocket/stomp.min.js"></script>&ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; ADD THIS: Load SockJS and Stomp from CDN &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>&ndash;&gt;-->
+
+<!--&lt;!&ndash;    <script src="app.js" defer></script>&ndash;&gt;-->
+<!--&lt;!&ndash;</head>&ndash;&gt;-->
+<!--&lt;!&ndash;<body class="bg-gray-100 font-sans">&ndash;&gt;-->
+<!--&lt;!&ndash;&lt;!&ndash; Login/Registration Section (hidden after login) &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;<div id="login-section" class="flex items-center justify-center min-h-screen">&ndash;&gt;-->
+<!--&lt;!&ndash;    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">&ndash;&gt;-->
+<!--&lt;!&ndash;        <h2 class="text-2xl font-bold mb-4">Login or Register</h2>&ndash;&gt;-->
+<!--&lt;!&ndash;        &lt;!&ndash; Login Form &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;        <form id="login-form" class="mb-4">&ndash;&gt;-->
+<!--&lt;!&ndash;            <h3 class="text-lg font-medium mb-2">Login</h3>&ndash;&gt;-->
+<!--&lt;!&ndash;            <input id="login-username" type="text" placeholder="Username" class="w-full p-2 mb-4 border rounded">&ndash;&gt;-->
+<!--&lt;!&ndash;            <input id="login-password" type="password" placeholder="Password" class="w-full p-2 mb-4 border rounded">&ndash;&gt;-->
+<!--&lt;!&ndash;            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Login</button>&ndash;&gt;-->
+<!--&lt;!&ndash;            <p id="login-error" class="text-red-500 mt-2 hidden">Invalid credentials</p>&ndash;&gt;-->
+<!--&lt;!&ndash;        </form>&ndash;&gt;-->
+<!--&lt;!&ndash;        &lt;!&ndash; Registration Form &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;        <form id="register-form">&ndash;&gt;-->
+<!--&lt;!&ndash;            <h3 class="text-lg font-medium mb-2">Register</h3>&ndash;&gt;-->
+<!--&lt;!&ndash;            <input id="register-username" type="text" placeholder="Username" class="w-full p-2 mb-4 border rounded">&ndash;&gt;-->
+<!--&lt;!&ndash;            <input id="register-email" type="email" placeholder="Email" class="w-full p-2 mb-4 border rounded">&ndash;&gt;-->
+<!--&lt;!&ndash;            <input id="register-password" type="password" placeholder="Password" class="w-full p-2 mb-4 border rounded">&ndash;&gt;-->
+<!--&lt;!&ndash;            <button type="submit" class="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600">Register</button>&ndash;&gt;-->
+<!--&lt;!&ndash;            <p id="register-error" class="text-red-500 mt-2 hidden">Registration failed</p>&ndash;&gt;-->
+<!--&lt;!&ndash;        </form>&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+<!--&lt;!&ndash;</div>&ndash;&gt;-->
+
+<!--&lt;!&ndash;&lt;!&ndash; Chat Section (hidden until login) &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;<div id="chat-section" class="hidden max-w-4xl mx-auto p-4">&ndash;&gt;-->
+<!--&lt;!&ndash;    <h1 class="text-3xl font-bold mb-4">Chat App</h1>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Room Selection &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div class="mb-4">&ndash;&gt;-->
+<!--&lt;!&ndash;        <label for="room-select" class="block text-lg font-medium">Select Room:</label>&ndash;&gt;-->
+<!--&lt;!&ndash;        <select id="room-select" class="w-full p-2 border rounded"></select>&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Create New Room &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div class="mb-4">&ndash;&gt;-->
+<!--&lt;!&ndash;        <form id="create-room-form">&ndash;&gt;-->
+<!--&lt;!&ndash;            <label for="room-name" class="block text-lg font-medium">Create New Room:</label>&ndash;&gt;-->
+<!--&lt;!&ndash;            <div class="flex">&ndash;&gt;-->
+<!--&lt;!&ndash;                <input id="room-name" type="text" placeholder="Enter room name" class="flex-1 p-2 border rounded-l">&ndash;&gt;-->
+<!--&lt;!&ndash;                <button type="submit" class="bg-green-500 text-white p-2 rounded-r hover:bg-green-600">Create</button>&ndash;&gt;-->
+<!--&lt;!&ndash;            </div>&ndash;&gt;-->
+<!--&lt;!&ndash;            <p id="create-room-error" class="text-red-500 mt-2 hidden">Failed to create room</p>&ndash;&gt;-->
+<!--&lt;!&ndash;        </form>&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Active Users &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div class="mb-4">&ndash;&gt;-->
+<!--&lt;!&ndash;        <h2 class="text-lg font-medium">Active Users:</h2>&ndash;&gt;-->
+<!--&lt;!&ndash;        <div id="user-list" class="bg-white p-2 border rounded"></div>&ndash;&gt;-->
+<!--&lt;!&ndash;    </div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Typing Indicator &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div id="typing-indicator" class="text-gray-500 italic mb-2"></div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Notifications &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div id="notification-area" class="mb-4"></div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Messages Display &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <div id="messages" class="bg-white p-4 h-96 overflow-y-auto border rounded mb-4"></div>&ndash;&gt;-->
+<!--&lt;!&ndash;    &lt;!&ndash; Message Input &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;    <form id="message-form" class="flex">&ndash;&gt;-->
+<!--&lt;!&ndash;        <input id="message-input" type="text" placeholder="Type a message..." class="flex-1 p-2 border rounded-l">&ndash;&gt;-->
+<!--&lt;!&ndash;        <button type="submit" class="bg-blue-500 text-white p-2 rounded-r hover:bg-blue-600">Send</button>&ndash;&gt;-->
+<!--&lt;!&ndash;    </form>&ndash;&gt;-->
+<!--&lt;!&ndash;</div>&ndash;&gt;-->
+<!--&lt;!&ndash;</body>&ndash;&gt;-->
+<!--&lt;!&ndash;</html>&ndash;&gt;-->
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8" />-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>-->
+<!--    <title>Chat App</title>-->
+<!--    <script src="https://cdn.tailwindcss.com"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>-->
+<!--    <script src="app.js" defer></script>-->
+<!--</head>-->
+<!--<body class="bg-gray-100 font-sans">-->
+
+<!--&lt;!&ndash; Login/Registration Section &ndash;&gt;-->
+<!--<div id="login-section" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-200">-->
+<!--    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg space-y-6">-->
+<!--        <h2 class="text-3xl font-bold text-center text-blue-700">Welcome to ChatApp</h2>-->
+
+<!--        &lt;!&ndash; Login Form &ndash;&gt;-->
+<!--        <form id="login-form" class="space-y-4">-->
+<!--            <h3 class="text-xl font-semibold text-gray-700">Login</h3>-->
+<!--            <input id="login-username" type="text" placeholder="Username" class="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-300" />-->
+<!--            <input id="login-password" type="password" placeholder="Password" class="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-300" />-->
+<!--            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">Login</button>-->
+<!--            <p id="login-error" class="text-red-600 text-sm hidden">Invalid credentials</p>-->
+<!--        </form>-->
+
+<!--        &lt;!&ndash; Divider &ndash;&gt;-->
+<!--        <div class="text-center text-gray-400">or</div>-->
+
+<!--        &lt;!&ndash; Register Form &ndash;&gt;-->
+<!--        <form id="register-form" class="space-y-4">-->
+<!--            <h3 class="text-xl font-semibold text-gray-700">Register</h3>-->
+<!--            <input id="register-username" type="text" placeholder="Username" class="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-green-300" />-->
+<!--            <input id="register-email" type="email" placeholder="Email" class="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-green-300" />-->
+<!--            <input id="register-password" type="password" placeholder="Password" class="w-full p-3 border rounded-md focus:outline-none focus:ring focus:border-green-300" />-->
+<!--            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">Register</button>-->
+<!--            <p id="register-error" class="text-red-600 text-sm hidden">Registration failed</p>-->
+<!--        </form>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--&lt;!&ndash; Chat Section &ndash;&gt;-->
+<!--&lt;!&ndash; Chat Section &ndash;&gt;-->
+<!--<div id="chat-section" class="hidden max-w-6xl mx-auto p-4 space-y-6">-->
+<!--    &lt;!&ndash; Room Header &ndash;&gt;-->
+<!--    <div class="flex items-center justify-between">-->
+<!--        <h1 class="text-3xl font-bold text-blue-700">💬 Chat Room</h1>-->
+<!--        <select id="room-select" class="p-2 border rounded shadow-sm bg-white text-gray-700">-->
+<!--            <option value="">Select a room</option>-->
+<!--        </select>-->
+<!--    </div>-->
+
+
+
+<!--    &lt;!&ndash; Grid: Messages + Active Users &ndash;&gt;-->
+<!--    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">-->
+<!--        &lt;!&ndash; Messages Section &ndash;&gt;-->
+<!--        <div class="col-span-3 bg-white rounded-lg shadow p-4 flex flex-col h-[500px]">-->
+<!--            <div id="messages" class="flex-1 overflow-y-auto space-y-3 pr-2">-->
+<!--                &lt;!&ndash; Messages go here &ndash;&gt;-->
+<!--                &lt;!&ndash; Example Message Bubble (JS will generate these) &ndash;&gt;-->
+<!--                &lt;!&ndash;-->
+<!--                <div class="flex flex-col items-start">-->
+<!--                  <div class="bg-blue-100 px-4 py-2 rounded-lg shadow-sm max-w-[75%]">-->
+<!--                    <p class="font-semibold text-blue-700">Ashu</p>-->
+<!--                    <p class="text-sm">Hello there!</p>-->
+<!--                  </div>-->
+<!--                  <span class="text-xs text-gray-400 mt-1 ml-2">10:02 AM</span>-->
+<!--                </div>-->
+<!--                &ndash;&gt;-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Typing Indicator &ndash;&gt;-->
+<!--            <div id="typing-indicator" class="text-sm italic text-gray-500 mt-3 hidden">-->
+<!--        <span class="flex items-center gap-2">-->
+<!--          <span id="typing-user">Someone</span> is typing-->
+<!--          <span class="animate-pulse">...</span>-->
+<!--        </span>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; Input &ndash;&gt;-->
+<!--            <form id="message-form" class="flex mt-4 gap-2">-->
+<!--                <input id="message-input" type="text" placeholder="Type a message..." class="flex-1 p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400" />-->
+<!--                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Send</button>-->
+<!--            </form>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Active Users Section &ndash;&gt;-->
+<!--        <div class="bg-white p-4 rounded-lg shadow h-[500px] overflow-y-auto">-->
+<!--            <h2 class="text-lg font-semibold text-gray-700 mb-2">👥 Active Users</h2>-->
+<!--            <div id="user-list" class="space-y-2">-->
+<!--                &lt;!&ndash; Example User Pill (JS will inject users) &ndash;&gt;-->
+<!--                &lt;!&ndash;-->
+<!--                <div class="flex items-center gap-2">-->
+<!--                  <div class="w-8 h-8 bg-blue-400 text-white rounded-full flex items-center justify-center font-bold">A</div>-->
+<!--                  <span class="text-sm font-medium text-gray-700">Ashu</span>-->
+<!--                </div>-->
+<!--                &ndash;&gt;-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        &lt;!&ndash; Create Room &ndash;&gt;-->
+<!--        <form id="create-room-form" class="flex gap-2">-->
+<!--            <input id="room-name" type="text" placeholder="Create new room..." class="flex-1 p-2 border rounded focus:outline-none focus:ring focus:border-green-400" />-->
+<!--            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Create</button>-->
+<!--        </form>-->
+<!--        <p id="create-room-error" class="text-red-600 hidden text-sm"></p>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Notifications &ndash;&gt;-->
+<!--    <div id="notification-area" class="space-y-2"></div>-->
+<!--</div>-->
+
+
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Chat App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="app.js" defer></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<!-- Login Section -->
+<div id="login-section" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-200">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg space-y-6">
+        <h2 class="text-3xl font-bold text-center text-blue-700">Welcome to ChatApp</h2>
+
+        <!-- Login Form -->
+        <form id="login-form" class="space-y-4">
+            <h3 class="text-xl font-semibold text-gray-700">Login</h3>
+            <input id="login-username" type="text" placeholder="Username" class="w-full p-3 border rounded-md" />
+            <input id="login-password" type="password" placeholder="Password" class="w-full p-3 border rounded-md" />
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md">Login</button>
+            <p id="login-error" class="text-red-600 text-sm hidden">Invalid credentials</p>
+        </form>
+
+        <div class="text-center text-gray-400">or</div>
+
+        <!-- Register Form -->
+        <form id="register-form" class="space-y-4">
+            <h3 class="text-xl font-semibold text-gray-700">Register</h3>
+            <input id="register-username" type="text" placeholder="Username" class="w-full p-3 border rounded-md" />
+            <input id="register-email" type="email" placeholder="Email" class="w-full p-3 border rounded-md" />
+            <input id="register-password" type="password" placeholder="Password" class="w-full p-3 border rounded-md" />
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md">Register</button>
+            <p id="register-error" class="text-red-600 text-sm hidden">Registration failed</p>
+        </form>
+    </div>
+</div>
+
+<!-- Chat Section -->
+<div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-blue-200">
+<div id="chat-section" class="hidden max-w-6xl mx-auto p-4 space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-blue-700">💬 Chat Room</h1>
+        <div class="flex items-center gap-4">
+            <select id="room-select" class="p-2 border rounded shadow-sm bg-white text-gray-700">
+                <option value="">Select a room</option>
+            </select>
+            <button id="sidebar-toggle" class="p-2 rounded bg-gray-200 hover:bg-gray-300 text-xl">☰</button>
+        </div>
+    </div>
+
+    <!-- Grid: Messages -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Messages -->
+        <div class="col-span-4 md:col-span-3 bg-white rounded-lg shadow p-4 flex flex-col h-[500px]">
+            <div id="messages" class="flex-1 overflow-y-auto space-y-3 pr-2"></div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="text-sm italic text-gray-500 mt-3 hidden">
+                <span class="flex items-center gap-2">
+                    <span id="typing-user">Someone</span> is typing
+                    <span class="animate-pulse">...</span>
+                </span>
+            </div>
+
+            <!-- Message Input -->
+            <form id="message-form" class="flex mt-4 gap-2">
+                <input id="message-input" type="text" placeholder="Type a message..." class="flex-1 p-3 border rounded-md focus:outline-none focus:ring focus:border-blue-400" />
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notification-area" class="space-y-2"></div>
+</div>
+
+<!-- Sidebar Drawer -->
+<div id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50 p-4 space-y-6">
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="text-xl font-bold text-gray-700">Menu</h2>
+        <button id="sidebar-close" class="text-xl font-bold text-gray-500 hover:text-red-500">&times;</button>
+    </div>
+
+    <!-- Active Users -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">👥 Active Users</h3>
+        <div id="user-list" class="space-y-2 h-40 overflow-y-auto border p-2 rounded"></div>
+    </div>
+
+    <!-- Create Room -->
+    <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">➕ Create Room</h3>
+        <form id="create-room-form" class="flex gap-2">
+            <input id="room-name" type="text" placeholder="Create new room..." class="flex-1 p-2 border rounded focus:outline-none focus:ring focus:border-green-400" />
+            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Create</button>
+        </form>
+        <p id="create-room-error" class="text-red-600 hidden text-sm mt-2"></p>
+    </div>
+</div>
+</div>
+<!-- Sidebar JS -->
+<script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    const closeBtn = document.getElementById('sidebar-close');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.remove('translate-x-full');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        sidebar.classList.add('translate-x-full');
+    });
+</script>
+
+</body>
+</html>
